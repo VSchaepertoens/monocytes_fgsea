@@ -9,11 +9,32 @@ library(fgsea)
 
 # import data -------------------------------------------------------------
 
-df_data <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = 5)%>%
-  clean_names()
+df_data_hpyl_vs_lps <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "Hpyl_vs_LPS") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t2hpylvs_t1lps, 
+         padj = p_value_adj_t2hpylvs_t1lps) %>%
+  mutate(coef = "hpyl_vs_lps")
+
+df_data_alwof_vs_lps <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "Alwof_vs_LPS") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t3alwofvs_t1lps, 
+         padj = p_value_adj_t3alwofvs_t1lps) %>%
+  mutate(coef = "alwof_vs_lps")
+
+df_data_alwof_vs_hpyl <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "AlwofvsHpyl") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t3alwofvs_t2hpyl, 
+         padj = p_value_adj_t3alwofvs_t2hpyl) %>%
+  mutate(coef = "alwof_vs_hpyl")  
 
 
-# clean gene names -------------------------------------------------------
+# bind dataframes by rows & clean gene names -------------------------------------------------------
+
+df_data <- bind_rows(
+  df_data_alwof_vs_hpyl,
+  df_data_alwof_vs_lps,
+  df_data_hpyl_vs_lps
+)
 
 df_data['gene'] <- gsub(" .+$", "", df_data$gene_names)
 
