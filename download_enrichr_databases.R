@@ -1,4 +1,22 @@
-#This code downloads EnrichR databases for gsea analysis
+## ---------------------------
+##
+## Script name: download_enrichr_databases
+##
+## Purpose of script: selects & downloads Enrichr databases for fGSEA analysis
+##
+## Author: Dr. Veronika Schäpertöns & Prof. Nikolaus Fortelny
+##
+## Date Created: 24.03.2023
+##
+## Copyright (c) Veronika Schäpertöns, 2023
+## Email: veronika.schaepertoens@plus.ac.at
+##
+## ---------------------------
+##
+## Notes:
+##   
+##
+## 
 
 
 # libraries ----------------------------------------------------------------
@@ -33,13 +51,13 @@ enrichrGetGenesets <- function(databases){
     fpath <- paste0("http://amp.pharm.mssm.edu/Enrichr/geneSetLibrary?mode=text&libraryName=",dbx)
     fhandle <- file(fpath)
     dblines <- tryCatch({
-      readLines(con=fhandle)
-    }, error=function(e){
+      readLines(con = fhandle)
+    }, error = function(e){
       message(e, "\nFailed reading database: ", dbx)
       NULL
     })
     close(fhandle)
-    if(is.null(dblines)){
+    if (is.null(dblines)) {
       return(list())
     }else {
       res <- strsplit(dblines, "\t")
@@ -56,7 +74,7 @@ genesets <- enrichrGetGenesets(databases = gene_set_lib)
 
 genesets <- do.call(rbind, lapply(names(genesets), function(db.nam){
   do.call(rbind,lapply(names(genesets[[db.nam]]), function(set.nam){
-    data.table(DB=db.nam, Geneset=set.nam, Gene=genesets[[db.nam]][[set.nam]])
+    data.table(DB = db.nam, Geneset = set.nam, Gene = genesets[[db.nam]][[set.nam]])
   }))
 }))
 
