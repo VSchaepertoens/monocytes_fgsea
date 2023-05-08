@@ -1,4 +1,22 @@
-#GSEA analysis for monocytes data induced with hpylori/alwoffii/LPS
+## ---------------------------
+##
+## Script name: monocytes_gsea
+##
+## Purpose of script: runs fGSEA analysis on three datasets (alwof_vs_hpyl, hpyl_vs_lps, alwof_vs_lps)
+##
+## Author: Dr. Veronika Schäpertöns & Nikolaus Fortelny
+##
+## Date Created: 23.03.2023
+##
+## Copyright (c) Veronika Schäpertöns, 2023
+## Email: veronika.schaepertoens@plus.ac.at
+##
+## ---------------------------
+##
+## Notes:
+##   
+##
+## 
 
 
 # import libraries ---------------------------------------------------------
