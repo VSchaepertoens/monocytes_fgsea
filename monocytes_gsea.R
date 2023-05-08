@@ -4,6 +4,7 @@
 # import libraries ---------------------------------------------------------
 library(readxl)
 library(tidyverse)
+library(data.table)
 library(janitor)
 library(fgsea)
 
@@ -46,13 +47,21 @@ genesets <- read_tsv("database/enrichr/enrichr_database.tsv")
 
 # enrichment analysis using fgsea -----------------------------------------
 set.seed(119)
+gsea.res <- data.table()
+de.grp <- df_data$coef[1]
 
-gsea.res <- data.table(fgsea(
-  pathways = with(genesets, split(Gene, paste(DB, Geneset, sep="__"))),
-  stats = with(df_data, setNames(object = df_data$coef_t3alwofvs_t2hpyl, nm = df_data$gene)),
-  nperm=1e6
-  )
-)
+for (de.grp in unique(df_data$coef)) {
+  print(de.grp)
+  gsea.res <- rbind(gsea.res, 
+                    data.table(fgsea(
+                      pathways = with(genesets, split(Gene, paste(DB, Geneset, sep = "__"))),
+                      stats = with(df_data[df_data$coef == de.grp,], setNames(object = log_fc, nm = gene)),
+                      nperm = 1e6), 
+                    grp = de.grp))
+}
+
+gsea.res_orig <- gsea.res
+#gsea.res <- gsea.res_orig
 
 gsea.res$leadingEdge <- sapply(gsea.res$leadingEdge, function(vec) paste(vec, collapse = ","))
 
@@ -61,6 +70,11 @@ dim(gsea.res[padj < 0.05])
 gsea.res[padj < 0.05]
 
 gsea.res[padj < 0.05][,-"leadingEdge"][order(padj)]
+
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_lps"][order(padj)]
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_lps"][order(padj)]
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_hpyl"][order(padj)]
+
 
 write_tsv(x = gsea.res, file = "analysis/gsea_alwof_vs_hpyl.tsv")
 
