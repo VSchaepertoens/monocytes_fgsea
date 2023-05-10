@@ -25,6 +25,7 @@ library(tidyverse)
 library(data.table)
 library(janitor)
 library(fgsea)
+library(fs)
 
 # import data -------------------------------------------------------------
 
@@ -55,7 +56,11 @@ df_data <- bind_rows(
   df_data_hpyl_vs_lps
 )
 
-df_data['gene'] <- gsub(" .+$", "", df_data$gene_names)
+
+df_data <- df_data %>% 
+  mutate(gene = str_replace(string = gene_names, 
+                            pattern = " .+$", 
+                            replacement = ""))
 
 
 # load genesets(actually pathways for fgsea) ------------------------------
@@ -93,6 +98,7 @@ gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_lps"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_lps"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_hpyl"][order(padj)]
 
+fs::dir_create("analysis")
 
-write_tsv(x = gsea.res, file = "analysis/gsea_alwof_vs_hpyl.tsv")
+write_tsv(x = gsea.res, file = "analysis/results_gsea.tsv")
 
