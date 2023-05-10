@@ -71,16 +71,16 @@ fit <- eBayes(fit)
 
 coefs <- grep("treatment", colnames(coef(fit)), value = TRUE)
 res <- data.table()
-for(coefx in coefs){
+for (coefx in coefs) {
   res <- rbind(res, data.table(
     topTable(fit, coef = coefx, number = nrow(data_matrix)), 
-    keep.rownames=TRUE,
-    coef=gsub("treatment", "", coefx)
+    keep.rownames = TRUE,
+    coef = gsub("treatment", "", coefx)
   ))
 }
-res[coef=="hpyl"][adj.P.Val < 0.05]
-res[coef=="alwof"][adj.P.Val < 0.05]
-res[coef=="lps"][adj.P.Val < 0.05]
+res[coef == "hpyl"][adj.P.Val < 0.05]
+res[coef == "alwof"][adj.P.Val < 0.05]
+res[coef == "lps"][adj.P.Val < 0.05]
 
 
 
