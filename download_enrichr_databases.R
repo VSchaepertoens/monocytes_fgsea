@@ -22,6 +22,8 @@
 # libraries ----------------------------------------------------------------
 
 library(tidyverse)
+library(data.table)
+library(fs)
 
 
 # specify which databases -------------------------------------------------
@@ -79,5 +81,7 @@ genesets <- do.call(rbind, lapply(names(genesets), function(db.nam){
 }))
 
 genesets[,Gene := gsub(",.+$", "", Gene)]
+
+fs::dir_create("database/enrichr")
 
 write_tsv(x = genesets, "database/enrichr/enrichr_database.tsv")
