@@ -47,13 +47,36 @@ df_data_alwof_vs_hpyl <- read_xlsx("data/Monocytes_Experiment_Results_20230316.x
          padj = p_value_adj_t3alwofvs_t2hpyl) %>%
   mutate(coef = "alwof_vs_hpyl")  
 
+df_data_lps_vs_uninduced <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t1lp_svs_control, 
+         padj = p_value_adj_t1lp_svs_control) %>%
+  select(c(1:6)) %>%
+  mutate(coef = "lps_vs_uninduced") 
+
+df_data_hpyl_vs_uninduced <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t2hpylvs_control, 
+         padj = p_value_adj_t2hpylvs_control) %>%
+  select(c(1:4,8:9)) %>%
+  mutate(coef = "hpyl_vs_uninduced") 
+
+df_data_alwof_vs_uninduced <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
+  clean_names() %>% 
+  rename(log_fc = coef_t3alwofvs_control, 
+         padj = p_value_adj_t3alwofvs_control) %>%
+  select(c(1:4,11:12)) %>%
+  mutate(coef = "alwof_vs_uninduced")
 
 # bind dataframes by rows & clean gene names -------------------------------------------------------
 
 df_data <- bind_rows(
   df_data_alwof_vs_hpyl,
   df_data_alwof_vs_lps,
-  df_data_hpyl_vs_lps
+  df_data_hpyl_vs_lps,
+  df_data_lps_vs_uninduced,
+  df_data_hpyl_vs_uninduced,
+  df_data_alwof_vs_uninduced
 )
 
 
@@ -97,6 +120,9 @@ gsea.res[padj < 0.05][,-"leadingEdge"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_lps"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_lps"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_hpyl"][order(padj)]
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_uninduced"][order(padj)]
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_uninduced"][order(padj)]
+gsea.res[padj < 0.05][,-"leadingEdge"][grp == "lps_vs_uninduced"][order(padj)]
 
 fs::dir_create("analysis")
 
