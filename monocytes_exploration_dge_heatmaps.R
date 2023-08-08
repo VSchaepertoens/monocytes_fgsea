@@ -102,20 +102,27 @@ filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t1lp_svs_control < 0.05) %>%
   as.data.table()
 
-ann.row <- with(filtered, data.frame(row.names = accession, logFC = ifelse(coef_t1lp_svs_control > 0, 1, -1)))
+ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t1lp_svs_control > 0, 1, -1)))
 
 ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
+
+png("figures/heatmap_lps_vs_cntrl_600dpi.png",
+    height = 100,
+    width = 100,
+    unit = "mm",
+    res = 600)
 
 pheatmap(data_matrix[filtered$accession,],
          cluster_cols = TRUE,
          show_rownames = FALSE,
          labels_col = ann_col$label_sample,
-         annotation_colors = list(logFC = c("blue","red")),
+         annotation_colors = list(log2FC = c("blue","red")),
          annotation_row = ann.row,
          scale = "row",
          width = ,
          height = )
 
+dev.off()
 
 # hp_vs_cntrl -------------------------------------------------------------
 
@@ -123,36 +130,49 @@ filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t2hpylvs_control < 0.05) %>%
   as.data.table()
 
-ann.row <- with(filtered, data.frame(row.names = accession, logFC = ifelse(coef_t2hpylvs_control > 0, 1, -1)))
+ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t2hpylvs_control > 0, 1, -1)))
 
 ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
+
+png("figures/heatmap_hp_vs_cntrl_600dpi.png",
+    height = 100,
+    width = 100,
+    unit = "mm",
+    res = 600)
 
 pheatmap(data_matrix[filtered$accession,],
          cluster_cols = TRUE,
          show_rownames = FALSE,
          labels_col = ann_col$label_sample,
-         annotation_colors = list(logFC = c("blue","red")),
+         annotation_colors = list(log2FC = c("blue","red")),
          annotation_row = ann.row,
          scale = "row",
          width = ,
          height = )
-
+dev.off()
 # aci_vs_cntrl ------------------------------------------------------------
 
 filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t3alwofvs_control < 0.05) %>%
   as.data.table()
 
-ann.row <- with(filtered, data.frame(row.names = accession, logFC = ifelse(coef_t3alwofvs_control > 0, 1, -1)))
+ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t3alwofvs_control > 0, 1, -1)))
 
 ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
+
+png("figures/heatmap_aci_vs_cntrl_600dpi.png",
+    height = 100,
+    width = 100,
+    unit = "mm",
+    res = 600)
 
 pheatmap(data_matrix[filtered$accession,],
          cluster_cols = TRUE,
          show_rownames = FALSE,
          labels_col = ann_col$label_sample,
-         annotation_colors = list(logFC = c("blue","red")),
+         annotation_colors = list(log2FC = c("blue","red")),
          annotation_row = ann.row,
          scale = "row",
          width = ,
          height = )
+dev.off()
