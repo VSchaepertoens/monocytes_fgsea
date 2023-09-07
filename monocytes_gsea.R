@@ -4,7 +4,7 @@
 ##
 ## Purpose of script: runs fGSEA analysis on three datasets (alwof_vs_hpyl, hpyl_vs_lps, alwof_vs_lps)
 ##
-## Author: Dr. Veronika Schäpertöns & Nikolaus Fortelny
+## Author: Dr. Veronika Schäpertöns & Prof. Nikolaus Fortelny
 ##
 ## Date Created: 23.03.2023
 ##
@@ -86,7 +86,7 @@ df_data <- df_data %>%
                             replacement = ""))
 
 
-# load genesets(actually pathways for fgsea) ------------------------------
+# load genesets(pathways for fgsea) ------------------------------
 
 genesets <- read_tsv("database/enrichr/enrichr_database.tsv")
 
