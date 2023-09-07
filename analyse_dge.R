@@ -22,6 +22,7 @@
 
 
 library(limma)
+library(fs)
 
 #import data (already log2 transformed normalized and batch corrected by limma in Perseus)-------
 
@@ -70,6 +71,8 @@ summary(decideTests(fit3))
 topTable(fit3)
 
 results <- data.frame(fit3)
+
+fs::dir_create("analysis")
 
 write.fit(fit3, 
           adjust = "BH",
