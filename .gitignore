@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+/data
+/database
+/database_old
+/02_Enr_Genesets
+/figures
+/analysis
+/analysis_old
+/scratch_scripts
+/presentations
+/paper_publication
