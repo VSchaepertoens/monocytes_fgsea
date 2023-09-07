@@ -8,18 +8,19 @@ library(data.table)
 library(readxl)
 
 
+# exploration of data -----------------------------------------------------
 
-# load dataset ------------------------------------------------------------
 
-df_log2_all <- read_csv("data/log2_substractMed_all_replicate.csv",
-                        col_names = TRUE) %>%
-  column_to_rownames(var = "...1") %>%
+## load dataset ------------------------------------------------------------
+
+df_log2_all <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", 
+                           sheet = "log2_substractMed_all_replicate") %>%
+  column_to_rownames(var = "Accession") %>%
   clean_names()
 
 data_matrix <- as.matrix(df_log2_all)  
 
-
-# create meta data table --------------------------------------------------
+## create meta data table --------------------------------------------------
 
 design_matrix <- data.frame(sample_name = colnames(df_log2_all),
                             label = rep(c("Uninduced","LPS","Hp","Aci"), each = 3)
@@ -31,7 +32,7 @@ design_matrix <- data.frame(sample_name = colnames(df_log2_all),
     remove = FALSE)
 
 
-# data exploration PCA & correlations ---------------------------------------
+## data exploration PCA & correlations ---------------------------------------
 
 plot(density(data_matrix))
 
@@ -89,14 +90,19 @@ ggplot(var_explained, aes(x = rownames(var_explained), y = variance)) +
 
 
 
-# Load tables with sig proteins (limma already run by Christof) -------------
+
+
+# visualisation of DGE results --------------------------------------------
+
+
+## load tables with sig proteins from analyse_dge --------------------------
 
 df_data_unind_vs_treated <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", 
                                       sheet = "log2_fold_changes_all_treatment") %>%
   clean_names()
 
 
-# lps_vs_cntrl ------------------------------------------------------------
+## lps_vs_cntrl ------------------------------------------------------------
 
 filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t1lp_svs_control < 0.05) %>%
@@ -124,7 +130,8 @@ pheatmap(data_matrix[filtered$accession,],
 
 dev.off()
 
-# hp_vs_cntrl -------------------------------------------------------------
+## hp_vs_cntrl -------------------------------------------------------------
+### Figure 2C heatmap -------------------------------------------------------
 
 filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t2hpylvs_control < 0.05) %>%
@@ -150,7 +157,18 @@ pheatmap(data_matrix[filtered$accession,],
          width = ,
          height = )
 dev.off()
-# aci_vs_cntrl ------------------------------------------------------------
+
+
+### Figure 2B volcano plot --------------------------------------------------
+
+ggplot(df_data_unind_vs_treated, aes(x = coef_t2hpylvs_control, y = -log10(p_value_adj_t2hpylvs_control))) +
+  geom_point() +
+  xlim(-3, 4) +
+  ylab("-log10(padj)") +
+  xlab("log2 fold change")
+
+
+## aci_vs_cntrl ------------------------------------------------------------
 
 filtered <- df_data_unind_vs_treated %>%
   filter(p_value_adj_t3alwofvs_control < 0.05) %>%
