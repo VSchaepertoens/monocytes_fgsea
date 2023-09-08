@@ -25,7 +25,7 @@ Prior to the analysis in this repository, the mass spectrometry proteomics data 
 
 For data evaluation, MaxQuant 2.0.1.0 [@Cox2008] was used with the setting Reporter ion MS2, using weighted ratio to reference channel for normalization and correcting for isotope impurities in the TMTpro reagents. For protein identification, a database from the Uniprot consortium [@Bateman2020] including only reviewed Swiss-Prot entries for Homo sapiens (Human) from 10.03.2023 was used applying a 1 % false discovery rate. The obtained protein groups (MaxQuant output file "proteinGroups.txt") were further processed using the Perseus 1.6.14.0 software platform [@Tyanova2016]: First the reporter intensities were log2 transformed, followed by the removal of proteins that were not detected in all samples, as well as the removal of proteins that were only identified by site, reverse sequence matches and potential contaminants like various isoforms of keratin. Next the reporter ion intensities were normalized by subtraction of the median intensity in each sample followed by a principal component analysis (PCA). As the PCA indicated a clustering not only dependent on the treatment, but also on the donor of the monocytes, the intensities were batch corrected employing the Remove batch effect function with the method Limma [@Ritchie2015] embedded in the PerseusR plugin [@Rudolph2018].
 
-Such log2-transformed, normalized, and batch-corrected data tables can be downloaded from the Zenodo repository xx.
+Such log2-transformed, normalized, and batch-corrected data tables can be downloaded from the Zenodo repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8324963.svg)](https://doi.org/10.5281/zenodo.8324963).
 
 ## Analysis description
 
@@ -35,7 +35,7 @@ Differential expression analysis was performed with Limma employing R (version 4
 
 ## Main workflow
 
-From the Zenodo repository xx, download the intermediary data to folder `data`. Run these R scripts in the given in order to generate all files & plots
+From the Zenodo repository [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8324963.svg)](https://doi.org/10.5281/zenodo.8324963) download the intermediary data to folder `data`. Run these R scripts in the given in order to generate all files & plots.
 
 -   [analyse_dge.R](analyse_dge.R) - Loads log2 transformed, normalized, & batch-corrected dataset and analyses differential expression of proteins in treated (LPS, Hp, Aci) and uninduced monocytes
 -   [monocytes_exploration_dge_heatmaps.R](monocytes_exploration_dge_heatmaps.R) - Loads log2 transformed, normalized, & batch-corrected dataset and perfoms explorative data analysis (PCA, Pearson correlations), loads results of DGE analysis and plots heatmaps of raw expressions only for significantly regulated proteins in lps_vs_uninduced, hp_vs_uninduced, aci_vs_uninduced conditions
