@@ -13,7 +13,7 @@ library(readxl)
 
 ## load dataset ------------------------------------------------------------
 
-df_log2_all <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", 
+df_log2_all <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", 
                            sheet = "log2_substractMed_all_replicate") %>%
   column_to_rownames(var = "Accession") %>%
   clean_names()
@@ -97,7 +97,7 @@ ggplot(var_explained, aes(x = rownames(var_explained), y = variance)) +
 
 ## load tables with sig proteins from analyse_dge --------------------------
 
-df_data_unind_vs_treated <- read_xlsx("data/Monocytes_Experiment_Results_20230316.xlsx", 
+df_data_unind_vs_treated <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", 
                                       sheet = "log2_fold_changes_all_treatment") %>%
   clean_names()
 
