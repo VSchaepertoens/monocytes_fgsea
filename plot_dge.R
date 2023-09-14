@@ -1,196 +1,132 @@
-# differential expression analysis using limma
-
 library(tidyverse)
 library(janitor)
 library(pheatmap)
 library(limma)
-library(data.table)
-library(readxl)
+library(fs)
+
+dir_create("figures")
 
 
-# exploration of data -----------------------------------------------------
 
+# load data ---------------------------------------------------------------
 
-## load dataset ------------------------------------------------------------
-
-df_log2_all <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", 
-                           sheet = "log2_substractMed_all_replicate") %>%
+data_matrix <-
+  read_delim(
+    "data/proteinGroups_log2_substractMedian_Batchcorrected.csv",
+    delim = ";"
+  ) %>% 
   column_to_rownames(var = "Accession") %>%
+  as.matrix()
+
+colnames(data_matrix) <- str_replace_all(
+  colnames(data_matrix),
+  c(Hpyl = "Hp", Alwof = "Aci", uninduced = "Uninduced")
+)
+
+df_data_unind_vs_treated <-
+  read_csv("analysis/results_limma.csv") %>%
   clean_names()
 
-data_matrix <- as.matrix(df_log2_all)  
-
-## create meta data table --------------------------------------------------
-
-design_matrix <- data.frame(sample_name = colnames(df_log2_all),
-                            label = rep(c("Uninduced","LPS","Hp","Aci"), each = 3)
-                            ) %>% 
-  separate(
-    sample_name, 
-    into = c("treatment", "replicate"), 
-    sep = "_", 
-    remove = FALSE)
 
 
-## data exploration PCA & correlations ---------------------------------------
+# data exploration PCA & correlations -------------------------------------
 
 plot(density(data_matrix))
 
 boxplot(data_matrix,
         las = 2,
-        names = design_matrix$sample_name,
         ylab = "log2 intensity")
 
-pheatmap(cor(data_matrix,method = "spearman"))
+pheatmap(cor(data_matrix, method = "spearman"))
 
 #plot PCA
-mds <- plotMDS(data_matrix, 
-        labels = design_matrix$sample_name, 
-        gene.selection = "common", 
-        var.explained = TRUE)
+mds <- plotMDS(
+  data_matrix, 
+  gene.selection = "common", 
+  var.explained = TRUE
+)
 
-var_explained <- as.data.frame(mds$var.explained[1:7]*100)
-colnames(var_explained) <- c("variance")
-ggplot(var_explained, aes(x = rownames(var_explained), y = variance)) +
+tibble(
+  pc = 1:7,
+  variance = mds$var.explained[1:7] * 100
+) %>% 
+  ggplot(aes(pc, variance)) +
   geom_col() +
-  geom_text(aes(label = round(variance, digits = 2)),vjust = -0.2) +
+  geom_text(aes(label = round(variance, digits = 2)), vjust = -0.2) +
   xlab("principal component number") +
   ylab("variance (%)")
-
-# # create design matrix ----------------------------------------------------
-# 
-# des <- copy(design_matrix)
-# unique(des$treatment)
-# 
-# des$treatment <- factor(des$treatment,
-#                         levels = c("uninduced", "lps", "hpyl", "alwof"))
-# 
-# des <- model.matrix(~treatment,
-#                     data = des)
-# 
-# # model fit ---------------------------------------------------------------
-# 
-# fit <- lmFit(data_matrix, des)
-# fit <- eBayes(fit)
-# 
-# # get results -------------------------------------------------------------
-# 
-# coefs <- grep("treatment", colnames(coef(fit)), value = TRUE)
-# res <- data.table()
-# for (coefx in coefs) {
-#   res <- rbind(res, data.table(
-#     topTable(fit, coef = coefx, number = nrow(data_matrix)), 
-#     keep.rownames = TRUE,
-#     coef = gsub("treatment", "", coefx)
-#   ))
-# }
-# res[coef == "hpyl"][adj.P.Val < 0.05]
-# res[coef == "alwof"][adj.P.Val < 0.05]
-# res[coef == "lps"][adj.P.Val < 0.05]
-
-
 
 
 
 # visualisation of DGE results --------------------------------------------
 
+## heatmaps ---------------------------------------------------------------
 
-## load tables with sig proteins from analyse_dge --------------------------
-
-df_data_unind_vs_treated <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", 
-                                      sheet = "log2_fold_changes_all_treatment") %>%
-  clean_names()
-
-
-## lps_vs_cntrl ------------------------------------------------------------
-
-filtered <- df_data_unind_vs_treated %>%
-  filter(p_value_adj_t1lp_svs_control < 0.05) %>%
-  as.data.table()
-
-ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t1lp_svs_control > 0, 1, -1)))
-
-ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
-
-png("figures/heatmap_lps_vs_cntrl_600dpi.png",
+plot_comparison <- function(logfc_col, p_col, file) {
+  df_filtered <-
+    df_data_unind_vs_treated %>%
+    filter({{p_col}} < 0.05)
+  
+  ann_row <-
+    df_filtered %>%
+    column_to_rownames("accession") %>% 
+    mutate(
+      log2FC = if_else({{logfc_col}} > 0, "positive", "negative"),
+      .keep = "none"
+    )
+  
+  png(
+    file,
     height = 100,
     width = 100,
     unit = "mm",
-    res = 600)
-
-pheatmap(data_matrix[filtered$accession,],
-         cluster_cols = TRUE,
-         show_rownames = FALSE,
-         labels_col = ann_col$label_sample,
-         annotation_colors = list(log2FC = c("blue","red")),
-         annotation_row = ann.row,
-         scale = "row",
-         width = ,
-         height = )
+    res = 600
+  )
+  
+  pheatmap(
+    data_matrix[df_filtered$accession,],
+    cluster_cols = TRUE,
+    show_rownames = FALSE,
+    annotation_colors = list(log2FC = c(negative = "blue", positive = "red")),
+    annotation_row = ann_row,
+    scale = "row"
+  )
+  
+  dev.off()
+}
 
 dev.off()
 
-## hp_vs_cntrl -------------------------------------------------------------
-### Figure 2C heatmap -------------------------------------------------------
+# aci vs control
+plot_comparison(
+  coef_t3alwofvs_control,
+  p_value_adj_t3alwofvs_control,
+  "figures/heatmap_aci_vs_cntrl_600dpi.png"
+)
 
-filtered <- df_data_unind_vs_treated %>%
-  filter(p_value_adj_t2hpylvs_control < 0.05) %>%
-  as.data.table()
+# hp vs control
+plot_comparison(
+  coef_t2hpylvs_control,
+  p_value_adj_t2hpylvs_control,
+  "figures/heatmap_hp_vs_cntrl_600dpi.png"
+)
 
-ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t2hpylvs_control > 0, 1, -1)))
-
-ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
-
-png("figures/heatmap_hp_vs_cntrl_600dpi.png",
-    height = 100,
-    width = 100,
-    unit = "mm",
-    res = 600)
-
-pheatmap(data_matrix[filtered$accession,],
-         cluster_cols = TRUE,
-         show_rownames = FALSE,
-         labels_col = ann_col$label_sample,
-         annotation_colors = list(log2FC = c("blue","red")),
-         annotation_row = ann.row,
-         scale = "row",
-         width = ,
-         height = )
-dev.off()
+# lps vs control
+plot_comparison(
+  coef_t1lp_svs_control,
+  p_value_adj_t1lp_svs_control,
+  "figures/heatmap_lps_vs_cntrl_600dpi.png"
+)
 
 
-### Figure 2B volcano plot --------------------------------------------------
+## Figure 2B volcano plot -------------------------------------------------
 
-ggplot(df_data_unind_vs_treated, aes(x = coef_t2hpylvs_control, y = -log10(p_value_adj_t2hpylvs_control))) +
+ggplot(
+  df_data_unind_vs_treated,
+  aes(coef_t2hpylvs_control, -log10(p_value_adj_t2hpylvs_control))
+) +
   geom_point() +
   xlim(-3, 4) +
   ylab("-log10(padj)") +
   xlab("log2 fold change")
 
-
-## aci_vs_cntrl ------------------------------------------------------------
-
-filtered <- df_data_unind_vs_treated %>%
-  filter(p_value_adj_t3alwofvs_control < 0.05) %>%
-  as.data.table()
-
-ann.row <- with(filtered, data.frame(row.names = accession, log2FC = ifelse(coef_t3alwofvs_control > 0, 1, -1)))
-
-ann_col = data.frame(label_sample = paste(design_matrix$label, design_matrix$replicate, sep = "_")) 
-
-png("figures/heatmap_aci_vs_cntrl_600dpi.png",
-    height = 100,
-    width = 100,
-    unit = "mm",
-    res = 600)
-
-pheatmap(data_matrix[filtered$accession,],
-         cluster_cols = TRUE,
-         show_rownames = FALSE,
-         labels_col = ann_col$label_sample,
-         annotation_colors = list(log2FC = c("blue","red")),
-         annotation_row = ann.row,
-         scale = "row",
-         width = ,
-         height = )
-dev.off()
