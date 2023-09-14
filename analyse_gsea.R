@@ -1,4 +1,4 @@
-## ---------------------------
+## 
 ##
 ## Script name: monocytes_gsea
 ##
@@ -11,7 +11,7 @@
 ## Copyright (c) Veronika Schäpertöns, 2023
 ## Email: veronika.schaepertoens@plus.ac.at
 ##
-## ---------------------------
+## 
 ##
 ## Notes:
 ##   
@@ -19,7 +19,6 @@
 ## 
 
 
-# import libraries ---------------------------------------------------------
 library(readxl)
 library(tidyverse)
 library(data.table)
@@ -27,68 +26,46 @@ library(janitor)
 library(fgsea)
 library(fs)
 
+
+
 # import data -------------------------------------------------------------
 
-df_data_hpyl_vs_lps <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "Hpyl_vs_LPS") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t2hpylvs_t1lps, 
-         padj = p_value_adj_t2hpylvs_t1lps) %>%
-  mutate(coef = "hpyl_vs_lps")
-
-df_data_alwof_vs_lps <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "Alwof_vs_LPS") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t3alwofvs_t1lps, 
-         padj = p_value_adj_t3alwofvs_t1lps) %>%
-  mutate(coef = "alwof_vs_lps")
-
-df_data_alwof_vs_hpyl <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "AlwofvsHpyl") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t3alwofvs_t2hpyl, 
-         padj = p_value_adj_t3alwofvs_t2hpyl) %>%
-  mutate(coef = "alwof_vs_hpyl")  
-
-df_data_lps_vs_uninduced <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t1lp_svs_control, 
-         padj = p_value_adj_t1lp_svs_control) %>%
-  select(c(1:6)) %>%
-  mutate(coef = "lps_vs_uninduced") 
-
-df_data_hpyl_vs_uninduced <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t2hpylvs_control, 
-         padj = p_value_adj_t2hpylvs_control) %>%
-  select(c(1:4,8:9)) %>%
-  mutate(coef = "hpyl_vs_uninduced") 
-
-df_data_alwof_vs_uninduced <- read_xlsx("analysis/Monocytes_Experiment_Results_20230316.xlsx", sheet = "log2_fold_changes_all_treatment") %>%
-  clean_names() %>% 
-  rename(log_fc = coef_t3alwofvs_control, 
-         padj = p_value_adj_t3alwofvs_control) %>%
-  select(c(1:4,11:12)) %>%
-  mutate(coef = "alwof_vs_uninduced")
-
-# bind dataframes by rows & clean gene names -------------------------------------------------------
-
-df_data <- bind_rows(
-  df_data_alwof_vs_hpyl,
-  df_data_alwof_vs_lps,
-  df_data_hpyl_vs_lps,
-  df_data_lps_vs_uninduced,
-  df_data_hpyl_vs_uninduced,
-  df_data_alwof_vs_uninduced
+coef_names <- c(
+  t1lp_svs_control = "lps_vs_uninduced",
+  t2hpylvs_control = "hpyl_vs_uninduced",
+  t3alwofvs_control = "alwof_vs_uninduced",
+  t2hpylvs_t1lps = "hpyl_vs_lps",
+  t3alwofvs_t1lps = "alwof_vs_lps",
+  t3alwofvs_t2hpyl = "alwof_vs_hpyl"
 )
 
+identifiers <-
+  read_csv("metadata/identifiers.csv") %>%
+  select(accession, gene_names)
 
-df_data <- df_data %>% 
-  mutate(gene = str_replace(string = gene_names, 
-                            pattern = " .+$", 
-                            replacement = ""))
+df_data <- 
+  read_csv("analysis/results_limma.csv") %>%
+  clean_names() %>% 
+  select(accession, starts_with("coef"), starts_with("p_value_adj")) %>% 
+  pivot_longer(
+    !accession,
+    names_to = c("type", "comparison"),
+    names_pattern = "(p_value_adj|coef)_(.+)"
+  ) %>%
+  pivot_wider(names_from = type) %>%
+  rename(log_fc = coef, padj = p_value_adj, coef = comparison) %>%
+  left_join(identifiers, by = "accession") %>% 
+  mutate(
+    coef = recode(coef, !!!coef_names),
+    gene = str_replace(gene_names, " .+$", "")
+  )
+
+df_data
 
 
-# load genesets(pathways for fgsea) ------------------------------
+# load genesets (pathways for fgsea) ------------------------------
 
-genesets <- read_tsv("database/enrichr/enrichr_database.tsv")
+genesets <- read_tsv("analysis/enrichr_database.tsv")
 
 
 # enrichment analysis using fgsea -----------------------------------------
@@ -109,12 +86,17 @@ for (de.grp in unique(df_data$coef)) {
 gsea.res_orig <- gsea.res
 #gsea.res <- gsea.res_orig
 
-gsea.res$leadingEdge <- sapply(gsea.res$leadingEdge, function(vec) paste(vec, collapse = ","))
+gsea.res$leadingEdge <- sapply(
+  gsea.res$leadingEdge, 
+  function(vec) paste(vec, collapse = ",")
+)
+
+
+# gsea results ------------------------------------------------------------
 
 dim(gsea.res[padj < 0.05])
 
 gsea.res[padj < 0.05]
-
 gsea.res[padj < 0.05][,-"leadingEdge"][order(padj)]
 
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_lps"][order(padj)]
@@ -124,7 +106,7 @@ gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_uninduced"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "hpyl_vs_uninduced"][order(padj)]
 gsea.res[padj < 0.05][,-"leadingEdge"][grp == "lps_vs_uninduced"][order(padj)]
 
-fs::dir_create("analysis")
 
+dir_create("analysis")
 write_tsv(x = gsea.res, file = "analysis/results_gsea.tsv")
 
