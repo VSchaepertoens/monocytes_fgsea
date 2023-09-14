@@ -36,7 +36,7 @@ Differential expression analysis was performed with Limma employing R, and p-val
 ## Main workflow
 
 Download raw data from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8324963.svg)](https://doi.org/10.5281/zenodo.8324963) to folder `data`, and run these R scripts in the given in order to generate all files & plots.
-Alternatively, intermediate generated data files may be downloaded to folder `analyis` in order to run arbitrary analysis scripts.
+Alternatively, intermediate generated data files may be downloaded to folder `analysis` in order to run arbitrary analysis scripts.
 
 - [analyse_dge.R](analyse_dge.R) - Loads log2 transformed, normalized, & batch-corrected dataset and analyses differential expression of proteins in treated (LPS, Hp, Aci) and uninduced monocytes
 - [plot_dge.R](plot_dge.R) - Loads log2 transformed, normalized, & batch-corrected dataset and performs explorative data analysis (PCA, Pearson correlations), loads results of DGE analysis and plots heatmaps of raw expressions only for significantly regulated proteins in lps_vs_uninduced, hp_vs_uninduced, aci_vs_uninduced conditions
