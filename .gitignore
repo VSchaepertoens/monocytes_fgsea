@@ -3,11 +3,8 @@
 .RData
 .Ruserdata
 /data
-/database
-/database_old
-/02_Enr_Genesets
-/analysis_old
-/scratch_scripts
+/figures
+/analysis/initial
 /presentations
 /paper_publication
 /analysis/results_gsea.tsv
