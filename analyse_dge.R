@@ -20,11 +20,11 @@ library(limma)
 library(fs)
 
 
+
 # Import data -------------------------------------------------------------
 
-# data was already log2 transformed, normalized and batch corrected 
+# data was already log2 transformed, normalized and batch corrected
 # by limma in Perseus
-
 
 df <- read.delim("data/proteinGroups_log2_substractMedian_Batchcorrected.csv", 
                  sep = ';', 
@@ -32,20 +32,23 @@ df <- read.delim("data/proteinGroups_log2_substractMedian_Batchcorrected.csv",
 dim(df)
 df
 
-#design matrix------------------------------------------------------------
+
+
+# Create design matrix ----------------------------------------------------
 
 sample <- as.factor(rep(c("Control", "T1LPS", "T2Hpyl", "T3Alwof"), each = 3))
 replicate <- as.factor(rep(1:3, 4))
 
 
-design.matrix <- model.matrix(~0+sample+replicate)
+design.matrix <- model.matrix(~0 + sample + replicate)
 colnames(design.matrix) <- gsub("sample", 
                                 "", 
                                 colnames(design.matrix))
 design.matrix
 
 
-# Contrasts for LIMMA-----------------------------------------------------
+
+# Contrasts for LIMMA -----------------------------------------------------
 
 contr.matrix <- makeContrasts(
   T1LPSvsControl = T1LPS  - Control,
@@ -59,7 +62,8 @@ contr.matrix <- makeContrasts(
 contr.matrix
 
 
-# Run LIMMA-----------------------------------------------------------------
+
+# Run LIMMA ---------------------------------------------------------------
 
 fit1 <- lmFit(df, design.matrix)
 fit2 <- contrasts.fit(fit1, contrasts = contr.matrix)
@@ -72,13 +76,13 @@ topTable(fit3)
 results <- data.frame(fit3)
 
 
-# Save results -----------------------------------------------------------
 
+# Save results ------------------------------------------------------------
 
 dir_create("analysis")
 
 write.fit(fit3, 
           adjust = "BH",
-          sep = ";", 
+          sep = ",", 
           row.names = FALSE, 
           file = "analysis/results_limma.csv")
