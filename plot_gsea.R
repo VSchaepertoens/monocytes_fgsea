@@ -1,4 +1,4 @@
-## ---------------------------
+## 
 ##
 ## Script name: plot_gsea
 ##
@@ -11,35 +11,61 @@
 ## Copyright (c) Veronika Schäpertöns, 2023
 ## Email: veronika.schaepertoens@plus.ac.at
 ##
-## ---------------------------
+## 
 ##
 ## Notes:
 ##   
 ##
-## ---------------------------
+## 
 
-library(ggplot2)
 library(tidyverse)
-library(data.table)
-library(paletteer)
 
 
-gsea.res <- read_tsv("analysis/results_gsea.tsv") %>%
-  data.table()
 
-dim(gsea.res[padj < 0.05])
+# load data ---------------------------------------------------------------
 
-gsea.res[padj < 0.05]
+database_short_names <- c(
+  "CORUM" = "CORUM",
+  "ENCODE_and_ChEA_Consensus_TFs_from_ChIP-X" = "ENCODE",
+  "GO_Biological_Process_2018" = "GO",
+  "GO_Cellular_Component_2018" = "GO",
+  "GO_Molecular_Function_2018" = "GO",
+  "Human_Gene_Atlas" = "HGA",
+  "KEGG_2019_Human" = "KEGG",
+  "MSigDB_Hallmark_2020" = "MSigDB",
+  "NCI-Nature_2016" = "NCI",
+  "TRANSFAC_and_JASPAR_PWMs" = "TRANSFAC",
+  "TRRUST_Transcription_Factors_2019" = "TRRUST",
+  "WikiPathways_2019_Human" = "WikiPathways_2019_Human"
+)
 
-# aci vs hp ---------------------------------------------------------------
+pathway_short_names <- 
+  read_tsv("analysis/results_gsea.tsv") %>% 
+  distinct(pathway) %>% 
+  separate_wider_delim(
+    pathway,
+    delim = "__",
+    names = c("database", "pathway_short"),
+    cols_remove = FALSE
+  ) %>% 
+  mutate(
+    database_short = recode(database, !!!database_short_names),
+    pathway_short = 
+      pathway_short %>% 
+      str_replace(" \\(GO:\\d+\\)", "") %>% 
+      str_replace(" WP\\d+", "")
+  ) %>% 
+  unite(pathway_short, database_short, col = "pathway_short", sep = " ") %>% 
+  select(pathway, pathway_short) %>% 
+  mutate(pathway_short = make.unique(pathway_short))
 
-data_to_plot <- gsea.res[padj < 0.05][,-"leadingEdge"][grp == "alwof_vs_hpyl"][order(padj)]
+gsea.res <-
+  read_tsv("analysis/results_gsea.tsv") %>% 
+  left_join(pathway_short_names, by = "pathway")
 
-write.table(data_to_plot, "analysis/gsea_alwof_hpyl.tsv")
 
-data_to_plot <- read_delim("analysis/gsea_alwof_hpyl_short.tsv",
-                           delim = " ")
-## bar graph ---------------------------------------------------------------
+
+# bar graph ---------------------------------------------------------------
 
 png("figures/gsea_hp_vs_aci_600dpi.png",
     height = 150,
@@ -72,7 +98,7 @@ write.table(data_to_plot, "analysis/gsea_hpyl_lps.tsv")
 
 data_to_plot <- read_delim("analysis/gsea_hpyl_lps_short.tsv",
                            delim = " ")
-## bar graph ---------------------------------------------------------------
+# bar graph ---------------------------------------------------------------
 
 png("figures/gsea_hp_vs_lps_600dpi.png",
     height = 200,
