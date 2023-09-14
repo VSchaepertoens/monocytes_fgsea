@@ -2,9 +2,11 @@
 .Rhistory
 .RData
 .Ruserdata
-/data
-/figures
-/analysis/initial
-/presentations
-/paper_publication
-/analysis/results_gsea.tsv
+data
+figures
+presentations
+paper_publication
+analysis/initial
+analysis/results_gsea.tsv
+analysis/results_limma.csv
+analysis/enrichr_database.tsv
