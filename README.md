@@ -6,7 +6,7 @@ bibliography: analysis_proteomics.bib
 
 # Helicobacter pylori induces short term trained immunity in monocytes via accumulation of NF-кB proteins
 
-This repository complements the publication by Frauenlob et al (2023)
+This repository complements the publication by Frauenlob et al (2023)  https://doi.org/10.3389/fimmu.2023.1290833
 
 ## Folders
 
